@@ -8,9 +8,17 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="edu.ucsb.cs.cs185.dvalderrama.dvalderramaMultiTouch.MainActivity$PlaceholderFragment" >
 
+    <edu.ucsb.cs.cs185.dvalderrama.dvalderramaMultiTouch.Marker
+        android:id="@+id/marker"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="fitXY"
+        android:alpha="0" />
+
     <edu.ucsb.cs.cs185.dvalderrama.dvalderramaMultiTouch.TouchView
         android:id="@+id/touchView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:scaleType="matrix" />
 
 </RelativeLayout>

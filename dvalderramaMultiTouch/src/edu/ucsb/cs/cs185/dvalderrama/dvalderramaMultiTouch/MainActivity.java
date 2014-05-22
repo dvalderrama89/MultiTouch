@@ -1,13 +1,17 @@
 package edu.ucsb.cs.cs185.dvalderrama.dvalderramaMultiTouch;
 
+import java.io.File;
+
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
@@ -17,6 +21,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -27,6 +32,10 @@ public class MainActivity extends ActionBarActivity {
 	private DialogFragment settingsFrag = new SettingsFragment();
 	private String mCurrentPhotoPath;
 	private static int RESULT_LOAD_IMAGE = 1;
+	private static TouchView touchView;
+	private Drawable bg_drawable;
+	private Bitmap bitmap;
+	private static Marker marker;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -37,6 +46,8 @@ public class MainActivity extends ActionBarActivity {
 			getSupportFragmentManager().beginTransaction()
 					.add(R.id.container, new PlaceholderFragment()).commit();
 		}
+		
+		
 	}
 
 	@Override
@@ -96,7 +107,7 @@ public class MainActivity extends ActionBarActivity {
     }
 	private void scaleAndSetPicture() {
 		//ImageView mImageView = (ImageView) findViewById(R.id.pictureView);
-		TouchView touchView = (TouchView) findViewById(R.id.touchView);
+		touchView = (TouchView) findViewById(R.id.touchView);
 	    // Get the dimensions of the View
 	    int targetW = touchView.getWidth();
 	    int targetH = touchView.getHeight();
@@ -117,10 +128,33 @@ public class MainActivity extends ActionBarActivity {
 	    bmOptions.inPurgeable = true;
 
 	    //Create the drawable from the bitmap
-	    Bitmap bitmap = BitmapFactory.decodeFile(mCurrentPhotoPath, bmOptions);
-	    Drawable d = new BitmapDrawable(bitmap);
+	    bitmap = BitmapFactory.decodeFile(mCurrentPhotoPath, bmOptions);
+	    bg_drawable = new BitmapDrawable(bitmap);
 	    //Display the drawable on the layout background
-	    touchView.setBackgroundDrawable(d);
+	    //touchView.setBackgroundDrawable(bg_drawable);
+	    touchView.setImageBitmap(bitmap);
+
+	}
+	
+	public boolean onTouchEvent(MotionEvent event)
+	{
+		//Log.d("touch", "this was touched");
+		ImageView v = (ImageView)findViewById(R.id.touchView);
+		try{
+			touchView.onTouch(v, event, bitmap);
+		}
+		catch(Exception e){
+			Log.d("touch", "need to select a picture from gallery before applying transforms!");
+		}
+		
+		//draw marker
+		marker = (Marker)findViewById(R.id.marker);
+		//get transformation matrix from the touch view to pass to the marker canvas matrix
+		Matrix m = touchView.getMatrix();
+		marker.onTouch(event, m);
+		
+		return true;
+		
 	}
 
 	/**
@@ -136,6 +170,31 @@ public class MainActivity extends ActionBarActivity {
 				Bundle savedInstanceState) {
 			View rootView = inflater.inflate(R.layout.fragment_main, container,
 					false);
+			
+			//after view has been inflated
+			//load default image
+			String mPath = "";
+			try{
+				mPath = (Environment.getExternalStorageDirectory() + 
+						File.separator + "ucsbmap.png").toString();
+				Log.d("path", mPath);
+			}
+			catch(Exception e){
+				Log.d("file", "ucsbmap.png doesn't exist!");
+			}
+			if(mPath != ""){
+				Bitmap b = BitmapFactory.decodeFile(mPath);
+				touchView = (TouchView) rootView.findViewById(R.id.touchView);
+				touchView.setImageBitmap(b);
+				
+				//set Z order
+				marker = (Marker) rootView.findViewById(R.id.marker);
+				marker.setZOrderOnTop(true);
+						
+			}
+			else
+				Log.d("file", "ucsbmap.png failed to load");
+			
 			return rootView;
 		}
 	}
